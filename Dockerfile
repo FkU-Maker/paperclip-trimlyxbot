@@ -83,6 +83,9 @@ ENV NODE_ENV=production \
   OPENCODE_ALLOW_ALL_MODELS=true \
   GEMINI_SANDBOX=false
 
+# TrimlyX agent config + skills
+COPY --chown=node:node .claude/ /paperclip/.claude/
+
 EXPOSE 3100
 
 ENTRYPOINT ["docker-entrypoint.sh"]

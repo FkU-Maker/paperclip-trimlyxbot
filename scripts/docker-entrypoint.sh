@@ -1,6 +1,18 @@
 #!/bin/sh
 set -e
 
+# Inject Claude OAuth credentials from env vars (Pro subscription auth)
+if [ -n "$CLAUDE_OAUTH_ACCESS_TOKEN" ] && [ -n "$CLAUDE_OAUTH_REFRESH_TOKEN" ]; then
+    CREDS_DIR="${PAPERCLIP_HOME:-/paperclip}/.claude"
+    CREDS_FILE="$CREDS_DIR/.credentials.json"
+    mkdir -p "$CREDS_DIR"
+    cat > "$CREDS_FILE" <<CREDS_EOF
+{"claudeAiOauth":{"accessToken":"${CLAUDE_OAUTH_ACCESS_TOKEN}","refreshToken":"${CLAUDE_OAUTH_REFRESH_TOKEN}","expiresAt":${CLAUDE_OAUTH_EXPIRES_AT:-0},"scopes":["user:file_upload","user:inference","user:mcp_servers","user:profile","user:sessions:claude_code"],"subscriptionType":"pro","rateLimitTier":"default_claude_ai"}}
+CREDS_EOF
+    chown -R "${USER_UID:-1000}:${USER_GID:-1000}" "$CREDS_DIR" 2>/dev/null || true
+    echo "docker-entrypoint.sh: Claude OAuth credentials injected"
+fi
+
 # Capture runtime UID/GID from environment variables, defaulting to 1000
 PUID=${USER_UID:-1000}
 PGID=${USER_GID:-1000}

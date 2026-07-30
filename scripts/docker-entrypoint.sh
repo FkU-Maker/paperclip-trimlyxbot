@@ -10,6 +10,24 @@ if [ ! -d "$PHOME/.claude" ] && [ -d "/app/.claude" ]; then
     chown -R node:node "$PHOME/.claude" 2>/dev/null || true
 fi
 
+# Generate .mcp.json for Composio MCP if API key is set
+if [ -n "$COMPOSIO_API_KEY" ]; then
+    cat > "$PHOME/.mcp.json" <<MCPEOF
+{
+  "mcpServers": {
+    "composio": {
+      "url": "https://connect.composio.dev/mcp",
+      "headers": {
+        "x-consumer-api-key": "$COMPOSIO_API_KEY"
+      }
+    }
+  }
+}
+MCPEOF
+    chown node:node "$PHOME/.mcp.json" 2>/dev/null || true
+    echo "docker-entrypoint.sh: Composio MCP config generated"
+fi
+
 # Inject Claude OAuth credentials from env vars (Pro subscription auth)
 if [ -n "$CLAUDE_OAUTH_ACCESS_TOKEN" ] && [ -n "$CLAUDE_OAUTH_REFRESH_TOKEN" ]; then
     CREDS_DIR="${PAPERCLIP_HOME:-/paperclip}/.claude"

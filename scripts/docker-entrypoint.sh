@@ -1,6 +1,15 @@
 #!/bin/sh
 set -e
 
+PHOME="${PAPERCLIP_HOME:-/paperclip}"
+
+# Volume initialization: copy image defaults to empty volume on first start
+if [ ! -d "$PHOME/.claude" ] && [ -d "/app/.claude" ]; then
+    echo "docker-entrypoint.sh: First start — initializing volume from image defaults..."
+    cp -r /app/.claude "$PHOME/.claude"
+    chown -R node:node "$PHOME/.claude" 2>/dev/null || true
+fi
+
 # Inject Claude OAuth credentials from env vars (Pro subscription auth)
 if [ -n "$CLAUDE_OAUTH_ACCESS_TOKEN" ] && [ -n "$CLAUDE_OAUTH_REFRESH_TOKEN" ]; then
     CREDS_DIR="${PAPERCLIP_HOME:-/paperclip}/.claude"

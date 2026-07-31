@@ -12,20 +12,22 @@ fi
 
 # Generate .mcp.json for Composio MCP if API key is set
 if [ -n "$COMPOSIO_API_KEY" ]; then
-    cat > "$PHOME/.mcp.json" <<MCPEOF
-{
+    MCP_JSON='{
   "mcpServers": {
     "composio": {
       "url": "https://connect.composio.dev/mcp",
       "headers": {
-        "x-consumer-api-key": "$COMPOSIO_API_KEY"
+        "x-consumer-api-key": "'"$COMPOSIO_API_KEY"'"
       }
     }
   }
-}
-MCPEOF
+}'
+    echo "$MCP_JSON" > "$PHOME/.mcp.json"
     chown node:node "$PHOME/.mcp.json" 2>/dev/null || true
-    echo "docker-entrypoint.sh: Composio MCP config generated"
+    # Also write to /app/ so agents running from /app/ cwd can discover it
+    echo "$MCP_JSON" > /app/.mcp.json 2>/dev/null || true
+    chown node:node /app/.mcp.json 2>/dev/null || true
+    echo "docker-entrypoint.sh: Composio MCP config generated at $PHOME/.mcp.json and /app/.mcp.json"
 fi
 
 # Inject Claude OAuth credentials from env vars (Pro subscription auth)

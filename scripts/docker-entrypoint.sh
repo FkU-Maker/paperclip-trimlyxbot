@@ -17,7 +17,7 @@ if [ -n "$COMPOSIO_API_KEY" ]; then
     "composio": {
       "url": "https://connect.composio.dev/mcp",
       "headers": {
-        "x-consumer-api-key": "'"$COMPOSIO_API_KEY"'"
+        "x-api-key": "'"$COMPOSIO_API_KEY"'"
       }
     }
   }

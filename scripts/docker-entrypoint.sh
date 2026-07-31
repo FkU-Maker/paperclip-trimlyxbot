@@ -29,15 +29,20 @@ MCPEOF
 fi
 
 # Inject Claude OAuth credentials from env vars (Pro subscription auth)
+# Only write if file does not exist yet — preserves tokens refreshed at runtime
 if [ -n "$CLAUDE_OAUTH_ACCESS_TOKEN" ] && [ -n "$CLAUDE_OAUTH_REFRESH_TOKEN" ]; then
     CREDS_DIR="${PAPERCLIP_HOME:-/paperclip}/.claude"
     CREDS_FILE="$CREDS_DIR/.credentials.json"
     mkdir -p "$CREDS_DIR"
-    cat > "$CREDS_FILE" <<CREDS_EOF
+    if [ ! -f "$CREDS_FILE" ]; then
+        cat > "$CREDS_FILE" <<CREDS_EOF
 {"claudeAiOauth":{"accessToken":"${CLAUDE_OAUTH_ACCESS_TOKEN}","refreshToken":"${CLAUDE_OAUTH_REFRESH_TOKEN}","expiresAt":${CLAUDE_OAUTH_EXPIRES_AT:-0},"scopes":["user:file_upload","user:inference","user:mcp_servers","user:profile","user:sessions:claude_code"],"subscriptionType":"pro","rateLimitTier":"default_claude_ai"}}
 CREDS_EOF
-    chown -R "${USER_UID:-1000}:${USER_GID:-1000}" "$CREDS_DIR" 2>/dev/null || true
-    echo "docker-entrypoint.sh: Claude OAuth credentials injected"
+        chown -R "${USER_UID:-1000}:${USER_GID:-1000}" "$CREDS_DIR" 2>/dev/null || true
+        echo "docker-entrypoint.sh: Claude OAuth credentials injected (first run)"
+    else
+        echo "docker-entrypoint.sh: Claude OAuth credentials file exists, preserving runtime-refreshed tokens"
+    fi
 fi
 
 # Capture runtime UID/GID from environment variables, defaulting to 1000
